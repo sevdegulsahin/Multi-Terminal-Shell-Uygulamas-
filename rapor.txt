@@ -1,0 +1,45 @@
+1. Giriş
+
+Bu projede, aynı anda birden fazla terminali destekleyen bir terminal uygulaması geliştirdik. Kullanıcılar, komut çalıştırma, geçmiş görüntüleme, mesajlaşma ve tema değiştirme gibi işlemleri farklı terminaller üzerinden yapabiliyor. Uygulama model-view-controller (MVC) yapısına göre planlandı. Bu raporda projenin nasıl tasarlandığı ve geliştirme sürecinde karşılaştığımız zorluklara nasıl çözümler bulduğumuz anlatılmaktadır.
+
+2. Tasarım Tercihleri
+
+MVC Yapısı
+Kodun düzenli ve yönetilebilir olması için projeyi model, görünüm ve denetleyici olmak üzere üç parçaya ayırdık. Bu yapı sayesinde arayüz, veri yönetimi ve kullanıcı etkileşimleri birbirinden bağımsız şekilde geliştirilebildi.
+
+Paylaşımlı Bellek ve Semaforlar
+Terminaller arasında mesaj alışverişini sağlamak için paylaşımlı bellek (shared memory) kullandık. Aynı belleğe birden fazla terminal eriştiği için verilerin çakışmaması adına semaforlar ile senkronizasyon sağladık. Bu yapı iletişimi oldukça hızlı hale getirdi, ancak doğru yönetilmediğinde çökme riskleriyle karşılaştık.
+
+Ayrı Süreçler Kullanımı
+Her terminali bağımsız bir süreç olarak çalıştırdık. Böylece bir terminalde sorun olsa bile diğerleri etkilenmeden çalışmaya devam edebiliyor. Bu yaklaşım sistemin kararlılığını artırdı ancak süreçleri yönetmek daha fazla dikkat gerektirdi.
+
+GTK Arayüzü
+Arayüzü GTK 3.0 ile tasarladık. Her terminalin bir giriş alanı, komut geçmişi ve mesajlaşma bölümü var. GTK, modern ve esnek bir yapı sunduğu için tercih edildi fakat başta öğrenmesi biraz zaman aldı. Ancak alıştıktan sonra ihtiyaçlarımızı karşılayan güzel bir arayüz oluşturabildik.
+
+Tema Sistemi
+Uygulamada üç farklı tema seçeneği sunduk: aydınlık, karanlık ve pembe. Tema geçişlerini CSS dosyaları üzerinden gerçekleştirdik. Görsel açıdan daha kullanıcı dostu bir deneyim sağladık. Tema geçişleri akıcı oldu fakat CSS üzerinde hata ayıklamak zaman zaman zorlayıcıydı.
+
+Komut Geçmişi
+Kullanıcıların daha önce yazdığı komutları tekrar kullanabilmesi için komut geçmişi tutma özelliği ekledik. Yukarı ve aşağı ok tuşları ile bu komutlar arasında gezilebiliyor. Komut sayısı arttıkça belleği verimli kullanmak için sınır koyduk.
+
+3. Karşılaşılan Zorluklar
+
+Paylaşımlı Bellek Yönetimi
+Uygulama kapatılırken paylaşımlı bellek ve semaforların düzgün şekilde serbest bırakılması gerekiyordu. Başta bu işlemler unutulduğunda sistemde kalan kaynaklar sorun yarattı. Daha sonra shm_unlink ve sem_unlink kullanarak bu problemleri çözdük.
+
+Süreç Yönetimi
+Her terminal ayrı bir süreç olduğundan, kaynak tüketimi ve hata yönetimi karmaşık hale geldi. fork() ve wait() işlemleriyle ilgili hataları dikkatlice kontrol ederek süreci yönetilebilir hale getirdik.
+
+GTK Öğrenme Süreci
+GTK daha önce deneyimlemediğimiz bir araçtı. Özellikle sinyal-slot sistemi ve CSS entegrasyonu ilk başta kafa karıştırıcıydı. Ancak dökümantasyon ve örnek projelerle ilerledikçe alıştık.
+
+Eşzamanlılık Sorunları
+Birden fazla terminal aynı anda belleğe erişmeye çalıştığında veri karışıklıkları yaşanabiliyordu. Bu durumu semaforlarla kontrol altına aldık ve kritik bölgelerde sem_wait ve sem_post kullandık.
+
+Boru ve Yönlendirme
+Komutlarda | ve > gibi operatörlerin desteklenmesi için özel işlemler yapmak gerekti. pipe() ve dup2() gibi sistem çağrılarıyla çözüm bulduk ama süreçleri doğru yönetmek zaman aldı.
+
+4. Sonuç
+
+Bu projeyle hem sistem programlaması hem de arayüz geliştirme konusunda birçok şey öğrendik. MVC yapısıyla kod daha düzenli hale geldi. Her terminalin ayrı çalışması sistemin stabilitesini artırdı. Paylaşımlı bellek ve semaforlar ile hızlı ve güvenli iletişim sağladık. GTK ile kullanıcı dostu bir arayüz oluşturduk. Temalar, bildirimler ve geçmiş sistemi gibi özellikler kullanıcı deneyimini iyileştirdi. Gelecekte, terminal sayısını artırmak, daha fazla komut desteği sunmak veya ağ üzerinden mesajlaşma gibi özellikler eklenebilir.
+
